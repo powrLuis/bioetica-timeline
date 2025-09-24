@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conferencia: Bioética y Derecho — Resumen Interactivo</title>
+  <style>
+    :root { --bg:#0b0f14; --card:#121821; --muted:#8aa0b2; --text:#e9f0f7; --accent:#66d9ef; --accent2:#a6e22e; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; background:linear-gradient(180deg,#0b0f14,#0e131a); color:var(--text); }
+    header { padding:18px 20px; border-bottom:1px solid #1f2a36; background:#0c1117; position:sticky; top:0; z-index:5; }
+    header h1 { margin:0; font-size:20px; letter-spacing:.3px; }
+    header .meta { font-size:12px; color:var(--muted); margin-top:6px; }
+
+    .app { display:grid; grid-template-columns: 380px 1fr; min-height: calc(100dvh - 72px); }
+    @media (max-width: 880px){ .app { grid-template-columns: 1fr; } }
+
+    aside { border-right:1px solid #1f2a36; background: #0e141c; }
+    .panel { padding:16px; }
+    .card { background:var(--card); border:1px solid #1b2633; border-radius:16px; padding:14px; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+
+    .video-wrap { padding:20px; }
+    .player-card { overflow:hidden; }
+    #player { width:100%; aspect-ratio: 16/9; border:0; display:block; background:#000; border-radius:12px; }
+
+    .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px; }
+    .controls input { flex:1; min-width:220px; padding:10px 12px; border-radius:10px; border:1px solid #203040; background:#0b121a; color:var(--text); }
+    .controls button { padding:10px 12px; border-radius:10px; border:1px solid #203040; background:#0b121a; color:var(--text); cursor:pointer; }
+    .controls button:hover { border-color:#2d445a; }
+
+    .search { margin-bottom:10px; }
+    .search input { width:100%; padding:10px 12px; border-radius:12px; border:1px solid #223244; background:#0b121a; color:var(--text); }
+
+    .list { display:flex; flex-direction:column; gap:10px; max-height: calc(100dvh - 260px); overflow:auto; padding-right:4px; }
+    .item { padding:12px; border-radius:12px; border:1px solid #1b2633; background: linear-gradient(180deg, #111a25, #0f1722); cursor:pointer; transition: transform .1s ease, border-color .2s ease; }
+    .item:hover { transform: translateY(-1px); border-color:#28405a; }
+    .item.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(102,217,239,.15) inset; }
+    .item .time { font-size:12px; color: var(--accent2); font-weight:600; letter-spacing:.3px; }
+    .item .title { margin:.2rem 0 .25rem; font-weight:700; }
+    .item .desc { font-size: 13px; color: var(--muted); line-height:1.35; }
+
+    .kbd { font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; background:#0d1420; border:1px solid #1b2a3b; padding:2px 6px; border-radius:6px; color:#cfe6ff; }
+    .hint { color: var(--muted); font-size:12px; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Conferencia: Importancia de la Bioética para el Derecho</h1>
+    <div class="meta">Resumen interactivo con marcas de tiempo · Haz clic en un ítem para saltar al momento exacto en YouTube.</div>
+  </header>
+
+  <div class="app">
+    <aside>
+      <div class="panel">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="search"><input id="q" type="search" placeholder="Buscar tema, palabra clave o minuto…" aria-label="Buscar"/></div>
+          <div class="hint">Atajos: <span class="kbd">↑/↓</span> navegar · <span class="kbd">Enter</span> reproducir/pausar · <span class="kbd">M</span> silencio.</div>
+        </div>
+        <div id="list" class="list" aria-label="Lista de segmentos"> </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="video-wrap">
+        <div class="card player-card">
+          <div id="player"></div>
+          <div class="controls">
+            <input id="videoId" placeholder="ID de YouTube (p.ej., dQw4w9WgXcQ)" aria-label="ID del video" />
+            <button id="loadBtn" title="Cargar video">Cargar</button>
+            <button id="playPauseBtn" title="Reproducir/Pausar">▶/⏸</button>
+            <button id="muteBtn" title="Silencio">🔇</button>
+          </div>
+          <div class="hint">Tip: si abres este archivo como <b>file://</b>, YouTube puede mostrar “Error 153”. Mejor ábrelo desde <b>http://localhost</b> (usa <span class="kbd">python -m http.server 5500</span> en la carpeta y visita <span class="kbd">http://localhost:5500</span>).</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 1) Datos del resumen (puedes editar, añadir o pegar los tuyos) -->
+  <script>
+    // Utilidad: convierte 'hh:mm:ss' o 'mm:ss' a segundos
+    function timeToSeconds(t){
+      if(!t) return 0;
+      const parts = t.split(":").map(Number);
+      if(parts.length===3){ return parts[0]*3600 + parts[1]*60 + parts[2]; }
+      if(parts.length===2){ return parts[0]*60 + parts[1]; }
+      return Number(t)||0;
+    }
+
+    // 👇 Reemplaza VIDEO_ID_AQUI por el ID real de YouTube o usa el input
+    const DEFAULT_VIDEO_ID = "Pk54LMQ1IsA"; // p.ej. "dQw4w9WgXcQ"
+
+    // Segmentos de ejemplo (extraídos de tu resumen con timestamps)
+    const SEGMENTOS = [
+  { t:"00:10:34", titulo:"Primeras apariciones del término en la revista Kosmos", desc:"Editorial en la revista alemana Kosmos; primeras apariciones del término y planteamiento de un imperativo bioético." },
+  { t:"00:11:00", titulo:"Potter: “Bioethics: Bridge to the Future”", desc:"Van Rensselaer Potter propone la bioética como puente entre ciencias biológicas y humanidades para orientar el futuro." },
+  { t:"00:11:43", titulo:"Definición de Garza Garza", desc:"Bioética como estudio de los problemas éticos derivados del desarrollo científico y tecnológico que afectan la vida humana." },
+  { t:"00:15:00", titulo:"El Derecho como ciencia interpretativa (aportes de la bioética)", desc:"La bioética enriquece la hermenéutica jurídica al integrar saberes científicos, filosóficos y sociales en la decisión jurídica." },
+
+  { t:"00:15:58", titulo:"Caso: trasplante de útero", desc:"Dilema cuando no hay riesgo vital directo pero sí interés reproductivo: ¿debe permitirse?" },
+  { t:"00:34:00", titulo:"Dilema: embriones congelados", desc:"Qué hacer con millones de embriones criopreservados: custodias, destinos y rol del Estado." },
+  { t:"00:17:02", titulo:"Caso: siameses con un solo corazón", desc:"Separación cuando solo uno puede sobrevivir: criterios éticos y jurídicos en conflicto." },
+
+  { t:"00:19:13", titulo:"Comités de bioética y asesoría institucional", desc:"Función orientadora a legisladores, jueces y gestores de salud para anticipar y evaluar casos sin regulación clara." },
+  { t:"00:20:23", titulo:"Relación dialógica: bioética ↔ derecho", desc:"La bioética orienta con principios; el derecho traduce en normas, sentencias y políticas." },
+
+  { t:"00:30:02", titulo:"Triaje UCI en pandemia (criterios y tensiones)", desc:"Asignación de camas UCI con recursos escasos: edad, pronóstico, llegada, responsabilidad social y justicia." },
+  { t:"00:30:02", titulo:"Criterio de priorización por edad (España/Italia)", desc:"Durante COVID-19, documentos propusieron priorizar pacientes más jóvenes; se discutió su coherencia con la vacunación." },
+  { t:"00:31:00", titulo:"Criterio del sorteo en caso de empate (México, 2020)", desc:"Directiva que resolvía empates clínicos por sorteo; polémica sobre igualdad y equidad." },
+
+  { t:"00:32:36", titulo:"Principio: respeto por la vida humana", desc:"Base deontológica: proteger la vida humana como valor fundamental." },
+  { t:"00:33:06", titulo:"Principio: autonomía y autodeterminación", desc:"Decisión informada y libre del paciente sobre su propio cuerpo y salud." },
+  { t:"00:47:00", titulo:"Principio: beneficencia y no maleficencia", desc:"Actuar en favor del paciente y evitar daño; evaluación riesgo/beneficio." },
+  { t:"00:34:09", titulo:"Principio: justicia (distribución equitativa)", desc:"Asignación equitativa de recursos y cargas; ¿dar a cada quien lo que le corresponde, y según qué criterio?" },
+  { t:"00:38:00", titulo:"Principio: pro persona", desc:"Interpretar y aplicar el derecho en el sentido más favorable a la persona." },
+  { t:"00:37:40", titulo:"Principio: proporcionalidad y ponderación", desc:"Sopesar principios en conflicto para elegir la alternativa menos lesiva." },
+  { t:"00:37:34", titulo:"Principio: doble efecto", desc:"Una acción con efectos buenos y malos puede justificarse bajo condiciones estrictas." },
+  { t:"00:37:47", titulo:"Principio: totalidad e integridad", desc:"No instrumentalizar el cuerpo humano; intervenciones justificadas por el bien del todo." },
+  { t:"00:37:47", titulo:"Principio: confidencialidad", desc:"Resguardo de la privacidad del paciente como elemento esencial de la relación clínica." },
+
+  { t:"00:41:34", titulo:"Edición genética y medicina del deseo", desc:"Límites entre prevenir enfermedades y satisfacer preferencias estéticas o sociales." },
+  { t:"00:43:29", titulo:"Transhumanismo y mejoras humanas", desc:"Debate sobre ‘mejorar’ capacidades más allá de lo terapéutico y sus límites ético-jurídicos." },
+
+  { t:"00:48:17", titulo:"De la bioética a las políticas públicas", desc:"Traslado de criterios bioéticos a reglas operativas en salud y gestión pública." },
+  { t:"00:53:02", titulo:"Cierre: no todo lo ético debe ser ley", desc:"Hay prácticas éticas a nivel personal que no deben imponerse como obligación jurídica general." },
+].map(s => ({ ...s, seconds: timeToSeconds(s.t) }));
+
+  </script>
+
+  <!-- 2) Interfaz: construir la lista y manejar filtros/teclado -->
+  <script>
+    const $list = document.getElementById('list');
+    const $q = document.getElementById('q');
+    let activeIndex = -1;
+
+    function renderList(items){
+      $list.innerHTML = '';
+      items.sort((a,b)=>a.seconds-b.seconds).forEach((s,idx)=>{
+        const el = document.createElement('button');
+        el.className = 'item';
+        el.dataset.index = idx;
+        el.innerHTML = `
+          <div class="time">⏱ ${s.t}</div>
+          <div class="title">${s.titulo}</div>
+          <div class="desc">${s.desc}</div>
+        `;
+        el.addEventListener('click', ()=> selectIndex(idx, true));
+        $list.appendChild(el);
+      });
+    }
+
+    function filterList(){
+      const q = ($q.value||'').toLowerCase().trim();
+      const items = SEGMENTOS
+        .map((s,i)=>({ ...s, i }))
+        .filter(s => !q || s.titulo.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q) || s.t.includes(q));
+      renderList(items);
+    }
+
+    function highlightActive(){
+      [...$list.children].forEach((el,i)=>{
+        el.classList.toggle('active', Number(el.dataset.index)===activeIndex);
+      });
+      if(activeIndex>=0){
+        $list.children[activeIndex]?.scrollIntoView({ block:'nearest', behavior:'smooth' });
+      }
+    }
+
+    $q.addEventListener('input', filterList);
+
+    document.addEventListener('keydown', (e)=>{
+      if(['INPUT','TEXTAREA'].includes(e.target.tagName) && e.target !== document.body) return;
+      if(e.key==='ArrowDown'){ e.preventDefault(); activeIndex = Math.min(activeIndex+1, SEGMENTOS.length-1); highlightActive(); }
+      if(e.key==='ArrowUp'){ e.preventDefault(); activeIndex = Math.max(activeIndex-1, 0); highlightActive(); }
+      if(e.key==='Enter'){ e.preventDefault(); if(activeIndex>=0) selectIndex(activeIndex, true); }
+      if(e.key.toLowerCase()==='m'){ toggleMute(); }
+      if(e.code==='Space'){ e.preventDefault(); playPause(); }
+    });
+
+    // Inicial
+    renderList(SEGMENTOS.map((s,i)=>({ ...s, i })));
+  </script>
+
+  <!-- 3) YouTube IFrame API -->
+  <script>
+    let player;
+    const $videoId = document.getElementById('videoId');
+    const $loadBtn = document.getElementById('loadBtn');
+    const $playPauseBtn = document.getElementById('playPauseBtn');
+    const $muteBtn = document.getElementById('muteBtn');
+
+    function onYouTubeIframeAPIReady(){
+      const ORIGIN = (location.origin && location.origin !== 'null' && location.origin.startsWith('http')) ? location.origin : 'https://localhost';
+      player = new YT.Player('player', {
+        videoId: DEFAULT_VIDEO_ID,
+        host: 'https://www.youtube-nocookie.com',
+        playerVars: { 'playsinline': 1, 'rel':0, 'modestbranding':1, 'origin': ORIGIN },
+        events: { onReady:onPlayerReady }
+      });
+    }
+    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+
+    function onPlayerReady(){
+      try {
+        const iframe = player.getIframe ? player.getIframe() : null;
+        if (iframe) {
+          iframe.setAttribute('loading','lazy');
+          iframe.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
+          iframe.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+        }
+      } catch (e) { /* noop */ }
+      // Autoplay moderno suele requerir el video silenciado
+      try { player.mute(); } catch (e) {}
+      if(DEFAULT_VIDEO_ID){ try { player.playVideo(); } catch (e) {} }
+      $videoId.value = DEFAULT_VIDEO_ID || '';
+    }
+
+    function loadVideo(){
+      const id = ($videoId.value||'').trim();
+      if(id && player?.loadVideoById){ player.loadVideoById(id); }
+    }
+
+    function playPause(){
+      if(!player) return;
+      const state = player.getPlayerState();
+      if(state===YT.PlayerState.PLAYING){ player.pauseVideo(); }
+      else { player.playVideo(); }
+    }
+
+    function toggleMute(){ if(player?.isMuted()){ player.unMute(); } else { player?.mute(); } }
+
+    function selectIndex(idx, seek=false){
+      activeIndex = idx;
+      highlightActive();
+      const seg = SEGMENTOS[idx];
+      if(seek && player?.seekTo){ player.seekTo(seg.seconds, true); player.playVideo(); }
+    }
+
+    $loadBtn.addEventListener('click', loadVideo);
+    $playPauseBtn.addEventListener('click', playPause);
+    $muteBtn.addEventListener('click', toggleMute);
+
+  </script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <!-- Notas de uso:
+    1) Descarga este archivo como .html y ábrelo en tu navegador.
+    2) Copia el ID del video de YouTube de la conferencia y pulsa "Cargar".
+    3) Edita el arreglo SEGMENTOS con tus títulos, descripciones y tiempos (hh:mm:ss).
+    4) Opcional: establece DEFAULT_VIDEO_ID para fijar el video por defecto.
+  -->
+</body>
+</html>
