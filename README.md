@@ -1,5 +1,8 @@
-# bioetica-timeline
-pagina html para probar un curso de derecho
+# Derecho Génetico y Bioética
+paginas web para las tareas del curso Derecho Genetico y Bioética
 
 ## Visualizar la línea del tiempo
-[**Ver bioetica_timeline.html**](./bioetica_timeline.html) - Línea del tiempo interactiva de la bioética
+[**Ver Linea del tiempo**](./bioetica_timeline.html) - Línea del tiempo de la historia de la bioética
+
+## Resumen 
+[**Ver Explorador interactivo**](./presentacion_interactiva_bioetica_y_derecho_you_tube_resumen.html) - Resumen y puntos clave del video sobre el video Importancia de la bioetica para el derecho.
