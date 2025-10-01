@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cuestionario: 10 de 50 al azar</title>
+  <style>
+    :root{
+      --bg:#0f172a;      /* slate-900 */
+      --panel:#111827;   /* gray-900 */
+      --muted:#94a3b8;   /* slate-400 */
+      --text:#e5e7eb;    /* gray-200 */
+      --accent:#22c55e;  /* green-500 */
+      --accent-2:#38bdf8;/* sky-400 */
+      --danger:#ef4444;  /* red-500 */
+      --warn:#f59e0b;    /* amber-500 */
+      --card:#0b1220;    /* darker */
+      --border:#1f2937;  /* gray-800 */
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell, Noto Sans, Arial, "Apple Color Emoji","Segoe UI Emoji"; 
+      background: radial-gradient(1200px 800px at 10% -10%, #0b1220 20%, transparent 60%),
+                  radial-gradient(1000px 600px at 110% 10%, #0b1220 20%, transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:960px; margin:40px auto; padding:0 16px}
+    header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px}
+    h1{font-size:clamp(22px, 4vw, 32px); margin:0; letter-spacing:.3px}
+    .sub{color:var(--muted); font-size:14px}
+    .card{background:linear-gradient(180deg, var(--panel), #0b1220); border:1px solid var(--border); border-radius:16px; padding:18px}
+    .controls{display:flex; flex-wrap:wrap; gap:10px}
+    button{
+      appearance:none; border:1px solid var(--border); background:#0b1220; color:var(--text); padding:10px 14px; border-radius:999px; cursor:pointer; 
+      transition:transform .06s ease, border-color .2s ease; font-weight:600
+    }
+    button:hover{transform: translateY(-1px); border-color:#334155}
+    button.primary{background:linear-gradient(180deg, #0ea5e9, #0284c7); border-color:transparent}
+    button.success{background:linear-gradient(180deg, #22c55e, #16a34a); border-color:transparent}
+    button.warn{background:linear-gradient(180deg, #f59e0b, #d97706); border-color:transparent}
+    button.ghost{background:transparent}
+    .q{border:1px solid var(--border); border-radius:14px; padding:14px; background:var(--card)}
+    .q + .q{margin-top:12px}
+    .q h3{margin:0 0 10px; font-size:16px}
+    .opt{display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:12px; border:1px solid transparent}
+    .opt input{margin-top:4px}
+    .opt:hover{background:#0f172a; border-color:#1f2937}
+    .opt.correct{outline:1px solid color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent)}
+    .opt.wrong{outline:1px solid color-mix(in srgb, var(--danger) 60%, transparent); background: color-mix(in srgb, var(--danger) 10%, transparent)}
+    .badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 10px; border-radius:999px; border:1px solid var(--border); color:var(--muted)}
+    .kpi{display:flex; gap:12px; flex-wrap:wrap}
+    .kpi .pill{padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:#0b1220; min-width:160px}
+    .kpi .title{font-size:12px; color:var(--muted)}
+    .kpi .value{font-size:22px; font-weight:700}
+    .progress{height:10px; background:#0b1220; border:1px solid var(--border); border-radius:999px; overflow:hidden}
+    .progress > div{height:100%; width:0%; background:linear-gradient(90deg, var(--accent-2), #22d3ee); transition:width .3s ease}
+    .results{margin-top:18px}
+    .list-inline{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#0b1220}
+    .chip.bad{border-color:color-mix(in srgb, var(--danger) 60%, #1f2937); background: color-mix(in srgb, var(--danger) 12%, #0b1220)}
+    .muted{color:var(--muted)}
+    footer{margin:28px 0 60px; text-align:center; color:var(--muted); font-size:12px}
+    details summary{cursor:pointer; user-select:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Banco de 50 preguntas → 10 al azar</h1>
+        <div class="sub">Preguntas de opción múltiple (4 alternativas, 1 correcta).</div>
+      </div>
+      <div class="controls">
+        <button id="btn-new" class="ghost" title="Elegir otro set aleatorio">Nueva selección</button>
+        <button id="btn-reset" class="ghost" title="Limpiar respuestas">Limpiar</button>
+      </div>
+    </header>
+
+    <div class="card" style="margin-bottom:14px">
+      <div class="kpi">
+        <div class="pill"><div class="title">Seleccionadas</div><div class="value"><span id="k-total">10</span> / 50</div></div>
+        <div class="pill"><div class="title">Contestadas</div><div class="value"><span id="k-answered">0</span> / <span id="k-need">10</span></div></div>
+        <div class="pill"><div class="title">Progreso</div><div class="value"><span id="k-progress">0%</span></div></div>
+        <div class="pill"><div class="title">Estado</div><div class="value" id="k-status">En curso</div></div>
+      </div>
+      <div class="progress" style="margin-top:12px"><div id="bar"></div></div>
+    </div>
+
+    <form id="quiz" class="card" novalidate></form>
+
+    <div class="card" style="margin-top:14px; display:flex; gap:10px; align-items:center; justify-content:space-between">
+      <div class="badge" id="helper">Responde todas las preguntas para habilitar el envío.</div>
+      <div class="controls">
+        <button id="btn-submit" class="primary" disabled>Calificar</button>
+        <button id="btn-review" class="warn" style="display:none">Reintentar mismas 10</button>
+      </div>
+    </div>
+
+    <div id="results" class="results"></div>
+
+    <footer>
+      Hecho con HTML, CSS y JavaScript puro. Autor: Luis.
+    </footer>
+  </div>
+
+  <script>
+    // ====== 1) Construir banco de 50 preguntas (DATOS REALES CON [*]) ======
+// Cada pregunta: { id, text, options: string[4..5], answer: 0..4 }
+function buildBank(){
+  // Marca la opción correcta con [*] en el texto; el script la detecta y la limpia.
+  const raw = [
+    {id:1, text:"Según el video del TC, ¿qué papel cumple la bioética respecto al derecho?", options:[
+      "Sustituye al derecho en la interpretación de normas.",
+      "Ilumina terrenos oscuros del derecho y ayuda a resolver situaciones. [*]",
+      "Garantiza la supremacía del poder judicial.",
+      "Se centra únicamente en la medicina y excluye lo jurídico.",
+      "Establece sanciones legales inmediatas."
+    ]},
+    {id:2, text:"¿Cuál es el principio fundamental que debe guiar a la bioética y al derecho?", options:[
+      "La autonomía absoluta de la ciencia.",
+      "La protección al libre mercado.",
+      "El respeto a la dignidad humana. [*]",
+      "Sólo la eficacia de las técnicas médicas."
+    ]},
+    {id:3, text:"¿Qué implica el principio de beneficencia?", options:[
+      "Prevenir o aliviar el daño y procurar el mayor beneficio posible para el paciente. [*]",
+      "Priorizar únicamente la voluntad del médico.",
+      "Aplicar tratamientos sin consentimiento para proteger la vida.",
+      "Mantener el bienestar social por encima del individual."
+    ]},
+    {id:4, text:"¿Cuál es una de las principales contribuciones de la bioética al derecho según la conferencia citada?", options:[
+      "La bioética reemplaza las leyes tradicionales con nuevos códigos morales específicos.",
+      "La bioética ofrece una perspectiva interdisciplinaria que ayuda a interpretar y enriquecer el derecho en temas complejos y sensibles. [*]",
+      "La bioética limita la autonomía individual en favor de decisiones exclusivamente legales.",
+      "La bioética se enfoca únicamente en los aspectos médicos y no influye en la legislación o la justicia."
+    ]},
+    {id:5, text:"¿Cuál de los siguientes es un principio básico de la bioética?", options:[
+      "Principio de seguridad social",
+      "Principio de proporcionalidad fiscal",
+      "Principio de respeto a la autonomía de la persona. [*]",
+      "Principio de legalidad tributaria"
+    ]},
+    {id:6, text:"¿Cuál NO es una de las características de la bioética?", options:[
+      "La interdisciplinariedad",
+      "Promueve el debate en una sociedad plural basada en la tolerancia",
+      "Tiene un contenido práctico",
+      "Busca elaborar una teoría sin la base de principios. [*]"
+    ]},
+    {id:7, text:"¿Qué concepto se acerca más a la función relevante del derecho en el ámbito de la bioética?", options:[
+      "Regulación frente a avances científicos que afectan en cuestiones sociales. [*]",
+      "Supervisar directamente a los médicos en cada procedimiento clínico.",
+      "Autorizar o denegar cirugías según criterios administrativos.",
+      "Determinar qué enfermedades deben ser tratadas prioritariamente en los hospitales."
+    ]},
+    {id:8, text:"¿Qué principio establece que el derecho debe interpretarse de la manera más favorable a la persona?", options:[
+      "Principio de Beneficencia",
+      "Principio de no Maleficencia",
+      "Principio Pro Hominem. [*]",
+      "Principio de Respeto a la vida humana"
+    ]},
+    {id:9, text:"Según el video, ¿cuál es la definición de la bioética?", options:[
+      "La bioética es la ciencia que estudia el comportamiento humano en la sociedad.",
+      "La bioética trata de los desórdenes del comportamiento humano en la sociedad.",
+      "La bioética trata sobre la conducta moral del ser humano, con relación a la vida, en sus más diferentes manifestaciones. [*]",
+      "La bioética es la sanción axiológica de la conciencia de cada ser humano y colectivo."
+    ]},
+    {id:10, text:"¿Cuál es uno de los principales desafíos actuales en la intersección entre bioética y derecho?", options:[
+      "La disminución de estudiantes interesados en el derecho penal.",
+      "La dificultad de integrar principios bioéticos en la regulación de tecnologías emergentes. [*]",
+      "La falta de publicaciones en revistas indexadas.",
+      "La desaparición del enfoque interdisciplinario en la investigación."
+    ]},
+    {id:11, text:"La bioética influyó en el desarrollo de la jurisprudencia; destacaron áreas como:", options:[
+      "Eutanasia",
+      "Reproducción asistida",
+      "Derechos reproductivos",
+      "Todas las anteriores. [*]"
+    ]},
+    {id:12, text:"¿Qué plantea la disparidad en la protección de derechos de los pacientes a nivel global?", options:[
+      "Preguntas éticas sobre justicia y equidad. [*]",
+      "Avances en inteligencia artificial.",
+      "Uniformidad automática en sistemas legales.",
+      "Mayor acceso a recursos médicos."
+    ]},
+    {id:13, text:"Según 'Bioética y derecho: tendencias e investigación', un desafío actual es:", options:[
+      "El exceso de regulaciones internacionales que ralentizan la innovación tecnológica.",
+      "La falta de interés académico en los estudios bioéticos.",
+      "La rapidez de los avances tecnológicos frente a la lenta capacidad del derecho para regularlos. [*]",
+      "La uniformidad excesiva en la protección de derechos humanos en distintas jurisdicciones."
+    ]},
+    {id:14, text:"¿Qué estudia la bioética (según el texto citado)?", options:[
+      "Las leyes y regulaciones.",
+      "Los avances tecnológicos.",
+      "Los dilemas morales en medicina y biotecnología. [*]",
+      "El análisis bibliométrico."
+    ]},
+    {id:15, text:"Completa: La bioética y el Derecho convergen cuando se abordan cuestiones relacionadas con la ………….. (Becerra Castro, 2021).", options:[
+      "Dignidad humana. [*]",
+      "Vida.",
+      "Salud.",
+      "Derecho a la bioética."
+    ]},
+    {id:16, text:"La bioética se diferencia de la ética tradicional porque:", options:[
+      "Se centra únicamente en la conducta médica.",
+      "Es la ética de la vida y se aplica a problemas concretos de salud e investigación. [*]",
+      "Está subordinada siempre al derecho positivo.",
+      "Tiene carácter exclusivamente religioso."
+    ]},
+    {id:17, text:"Pilar fundamental de la Bioética según Resolución N.º 63 (ONU):", options:[
+      "Supremacía de la ciencia sobre la dignidad humana.",
+      "Utilidad económica de la investigación genética.",
+      "Respeto por las personas. [*]",
+      "Neutralidad tecnológica."
+    ]},
+    {id:18, text:"Con recursos limitados, ¿qué principio guía la asignación?", options:[
+      "Beneficencia",
+      "No maleficencia",
+      "Justicia. [*]",
+      "Respeto a la autonomía"
+    ]},
+    {id:19, text:"¿Por qué es importante proteger el Genoma Humano?", options:[
+      "Para desarrollar nuevas especies humanas.",
+      "Porque contiene la esencia biológica de la vida y su protección resguarda a la humanidad presente y futura. [*]",
+      "Porque puede ser comercializado legalmente en algunos países.",
+      "Porque garantiza el acceso universal a tratamientos genéticos."
+    ]},
+    {id:20, text:"¿Qué principio garantiza el consentimiento informado?", options:[
+      "Beneficencia",
+      "Justicia",
+      "Respeto a la autonomía. [*]",
+      "No maleficencia"
+    ]},
+    {id:21, text:"¿Cuál es la diferencia principal entre Ética y Bioética?", options:[
+      "La ética estudia la conducta humana en general; la bioética se centra en la conducta relacionada con la biología y la salud. [*]",
+      "La ética solo analiza leyes y normas jurídicas.",
+      "La ética es exclusiva del ámbito religioso.",
+      "La ética estudia la conducta de los animales."
+    ]},
+    {id:22, text:"Beauchamp y Childress: ¿cuál afirmación es correcta?", options:[
+      "Beneficencia implica no causar daño a los pacientes.",
+      "Autonomía es respetar la capacidad de decidir sobre su propia vida y tratamientos. [*]",
+      "Justicia es atender primero a quienes tienen más recursos.",
+      "No maleficencia obliga a maximizar beneficios posibles."
+    ]},
+    {id:23, text:"Documento de 1979 que estableció principios éticos en investigación con seres humanos:", options:[
+      "Bioethics: Bridge to the Future",
+      "Informe de Belmont. [*]",
+      "Código de Nuremberg",
+      "Declaración Universal sobre Bioética y Derechos Humanos"
+    ]},
+    {id:24, text:"Según la Constitución peruana (1993), fin supremo de la sociedad y del Estado:", options:[
+      "Desarrollo económico sostenible.",
+      "La defensa de la persona humana y el respeto de su dignidad. [*]",
+      "Protección de los recursos naturales.",
+      "Preservación de la cultura y tradiciones."
+    ]},
+    {id:25, text:"¿Cuál NO es una disciplina de la bioética?", options:[
+      "Ética ambiental",
+      "Ética de la investigación científica",
+      "Ética asistencial",
+      "Ética normativa. [*]"
+    ]},
+    {id:26, text:"DS N.º 011-2011-JUS: aspecto fundamental para bioética en Perú:", options:[
+      "Desarrollo de tecnologías médicas avanzadas.",
+      "Respeto de la dignidad humana como fin y no como medio. [*]",
+      "Promoción de la economía nacional.",
+      "Descentralización de servicios de salud."
+    ]},
+    {id:27, text:"Corriente con “el mayor bien para el mayor número”:", options:[
+      "Bioética Universalista",
+      "Bioética Personalista",
+      "Bioética Utilitarista. [*]",
+      "Principalismo Bioético"
+    ]},
+    {id:28, text:"Corrientes teóricas que sustentan la Bioética:", options:[
+      "Utilitarista, Universalista, Personalista, Principalismo Bioético. [*]",
+      "Unilateral, Universalista, Principalismo",
+      "Personalista, Utilitarista, Principalismo Bioética",
+      "Universalista, Utilitarista, principal, personal"
+    ]},
+    {id:29, text:"Lineamientos en Perú: principios aplicados por enfermería:", options:[
+      "Respeto, igualdad, solidaridad y puntualidad. [*]",
+      "Autonomía, justicia, beneficencia y no maleficencia",
+      "Honestidad, responsabilidad, compromiso y lealtad",
+      "Confianza, seguridad, respeto y profesionalismo"
+    ]},
+    {id:30, text:"Código de Ética de Enfermería: derecho a la salud se fundamenta en:", options:[
+      "Solidaridad, empatía, cortesía y respeto.",
+      "Justicia, libertad, autonomía e imparcialidad.",
+      "Equidad, solidaridad, universalidad e integridad de la atención. [*]",
+      "Honestidad, disciplina, veracidad y lealtad"
+    ]},
+    {id:31, text:"No es tema abordado en Res. N.º 63: 'Los DD. HH. y la bioética':", options:[
+      "Derechos del hombre",
+      "Derechos clásicos y nuevos derechos de la persona",
+      "Bioética",
+      "Derechos de cuarta generación. [*]"
+    ]},
+    {id:32, text:"Principios de la 'trinidad' de la Bioética:", options:[
+      "Beneficencia y respeto",
+      "Respeto por las personas, libertad de investigación e individualidad",
+      "Respeto por las personas, beneficencia y justicia. [*]",
+      "Justicia, autonomía y utilidad"
+    ]},
+    {id:33, text:"No es característica de la Bioética:", options:[
+      "Nace en un ambiente científico para proteger la vida y su ambiente. [*]",
+      "Se apoya en la razón y buen juicio moral (principios autónomos y universales).",
+      "Protege integralmente al ser humano (física, mental, social).",
+      "Abarca la vida de animales y plantas."
+    ]},
+    {id:34, text:"¿Quién declaró que el genoma humano es patrimonio de la humanidad?", options:[
+      "La ONU",
+      "La UNESCO. [*]",
+      "La OMS",
+      "La Unión Europea"
+    ]},
+    {id:35, text:"“Documento madre” para proteger al ser humano y el genoma:", options:[
+      "Declaración Universal del Genoma Humano y los Derechos Humanos. [*]",
+      "Declaración de Mónaco",
+      "Declaración Universal de los Derechos Humanos",
+      "Resolución N.º 63: 'Los DD. HH. y la Bioética'"
+    ]},
+    {id:36, text:"Enrique Varsi Rospigliosi propone para el Perú:", options:[
+      "Suspensión temporal de toda investigación genética.",
+      "Creación de un Comité Nacional de Bioética. [*]",
+      "Dependencia exclusiva de comités éticos del CMP.",
+      "Prohibición absoluta de manipulación genética."
+    ]},
+    {id:37, text:"Característica fundamental otorgada al genoma humano:", options:[
+      "Puede ser objeto de comercialización con beneficios científicos.",
+      "Debe usarse sin restricciones éticas.",
+      "Es patrimonio de la humanidad. [*]",
+      "Pertenece a aseguradoras o empleadores."
+    ]},
+    {id:38, text:"¿Qué derechos se protegen al resguardar el genoma?", options:[
+      "Solo el derecho a la salud.",
+      "Vida, integridad, intimidad, identidad y salud. [*]",
+      "Únicamente la intimidad genética.",
+      "Propiedad intelectual sobre genes."
+    ]},
+    {id:39, text:"Res. 63: marque la que NO corresponde:", options:[
+      "Informar tareas para velar por la Declaración del Genoma Humano.",
+      "Establecer una política uniforme sobre Bioética.",
+      "Señalar la importancia de las investigaciones sobre el Genoma Humano.",
+      "Actuar en beneficio de la salud del niño sin su consentimiento informado. [*]"
+    ]},
+    {id:40, text:"Al legislar sobre Bioética/Derecho Genético, el ámbito de normación incide en:", options:[
+      "Normas de protección de la vida y de la relación biojurídica.",
+      "Normas de aplicación de los procesos.",
+      "Normas de represión y sanción.",
+      "Todas las anteriores. [*]"
+    ]},
+    {id:41, text:"Debate ético central respecto al Genoma Humano:", options:[
+      "Descubrir nuevos tratamientos médicos.",
+      "Peligro de manipulación, apropiación o uso comercial. [*]",
+      "Complejidad de descifrar la información genética.",
+      "Falta de recursos para su investigación."
+    ]},
+    {id:42, text:"¿Cuál es un principio fundamental de la Bioética?", options:[
+      "Productividad",
+      "Autonomía. [*]",
+      "Rentabilidad",
+      "Competitividad"
+    ]},
+    {id:43, text:"¿Cuál NO es un principio fundamental de la bioética?", options:[
+      "Respeto por las personas (Autonomía)",
+      "Igualdad. [*]",
+      "Justicia",
+      "Beneficencia"
+    ]},
+    {id:44, text:"¿Por qué los avances en genética exigen nuevos derechos humanos?", options:[
+      "Permiten comercializar completamente el genoma humano.",
+      "Crean nuevas amenazas a la libertad que requieren protección legal urgente. [*]",
+      "Buscan descifrar todos los genes del ser humano.",
+      "Pretenden reemplazar por completo el sistema legal vigente."
+    ]},
+    {id:45, text:"¿Qué es el Genoma Humano?", options:[
+      "Conjunto de leyes que regulan la biología humana.",
+      "Conjunto de genes que conforman a un ser vivo; el 'código de la vida'. [*]",
+      "Una célula encargada de producir proteínas.",
+      "El resultado del Proyecto Genoma Humano."
+    ]},
+    {id:46, text:"Según la Declaración Universal sobre el Genoma Humano, ¿qué principio NO se menciona directamente?", options:[
+      "Respeto a la dignidad humana.",
+      "Protección de los datos genéticos. [*]",
+      "Prohibición de la discriminación genética.",
+      "Derecho al consentimiento informado."
+    ]},
+    {id:47, text:"En Perú, respecto a manipulación genética, es correcto que:", options:[
+      "La clonación es compatible con la dignidad humana si es con fines médicos.",
+      "El niño debe estar al servicio de la ciencia.",
+      "La discriminación genética (genoísmo) puede generar riesgos laborales y en seguros por predisposición genética. [*]",
+      "Las TRA sustituyen la procreación natural."
+    ]},
+    {id:48, text:"La Declaración Universal sobre el Genoma Humano (UNESCO) consagra:", options:[
+      "Respeto a la dignidad humana por encima de cualquier otra consideración.",
+      "Prohibición de la discriminación genética (genoísmo).",
+      "Consentimiento previo, libre e informado para tratamientos o investigación.",
+      "Todas las anteriores. [*]"
+    ]},
+    {id:49, text:"Finalidad principal del Derecho que regula la ciencia genética:", options:[
+      "Favorecer el avance tecnológico sin restricciones legales.",
+      "Proteger a la persona, sus derechos e integridad frente a aplicaciones biogenéticas perjudiciales. [*]",
+      "Limitar la investigación científica en todas sus formas.",
+      "Regular solo relaciones laborales en genética."
+    ]},
+    {id:50, text:"¿Qué principio bioético garantiza decidir sobre el tratamiento mediante consentimiento informado?", options:[
+      "Beneficencia",
+      "Justicia",
+      "Respeto a la autonomía. [*]",
+      "No maleficencia"
+    ]}
+  ];
+
+  return raw.map(q=>{
+    let ans=-1;
+    const opts=q.options.map((t,i)=>{
+      if(/\[\*\]/.test(t)){ ans=i; return t.replace(/\s*\[\*\]\s*/,''); }
+      return t;
+    });
+    if(ans<0){ console.warn(`Pregunta ${q.id} sin [*]`); ans=0; }
+    return {...q, options:opts, answer:ans};
+  });
+}
+
+
+    // ====== 2) Utilidades ======
+    function shuffle(arr){
+      const a = arr.slice();
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+      return a;
+    }
+
+    function pickRandom(arr, n){
+      return shuffle(arr).slice(0,n);
+    }
+
+    function el(tag, attrs={}, ...children){
+      const e = document.createElement(tag);
+      for(const [k,v] of Object.entries(attrs||{})){
+        if(k==="class") e.className = v;
+        else if(k==="html") e.innerHTML = v;
+        else if(k.startsWith("on") && typeof v === "function") e.addEventListener(k.substring(2), v);
+        else e.setAttribute(k,v);
+      }
+      for(const c of children){
+        if(c==null) continue;
+        e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+      }
+      return e;
+    }
+
+    // ====== 3) Estado global ======
+    const BANK = buildBank();
+    const COUNT = 10;
+    let current = [];        // preguntas activas (10)
+    let userAnswers = {};    // { qId: 0..3 }
+    let submitted = false;
+
+    // ====== 4) Renderizar cuestionario ======
+    const quizForm = document.getElementById('quiz');
+    const resultsBox = document.getElementById('results');
+    const kAnswered = document.getElementById('k-answered');
+    const kNeed = document.getElementById('k-need');
+    const kProgress = document.getElementById('k-progress');
+    const kStatus = document.getElementById('k-status');
+    const bar = document.getElementById('bar');
+
+    function renderQuiz(){
+      quizForm.innerHTML = '';
+      resultsBox.innerHTML='';
+      userAnswers = {}; submitted = false;
+      kNeed.textContent = COUNT;
+      kStatus.textContent = 'En curso';
+      updateProgress();
+
+      current.forEach((q, idx)=>{
+        const qWrap = el('div', {class:'q', id:`q-${q.id}`});
+        const qTitle = el('h3', {}, `${idx+1}. ${q.text}`);
+        const optsWrap = el('div');
+
+        q.options.forEach((opt, oi)=>{
+          const id = `q${q.id}-opt${oi}`;
+          const radio = el('input', {type:'radio', id, name:`q-${q.id}`, value:String(oi), 'aria-labelledby':`${id}-lbl`});
+          radio.addEventListener('change', ()=>{
+            userAnswers[q.id] = oi; updateProgress();
+          });
+          const label = el('label', {for:id, id:`${id}-lbl`, class:'opt'}, el('span', {class:'muted'}, String.fromCharCode(65+oi)+'. '), el('span', {}, opt));
+          const row = el('div', {class:'opt-row'}, radio, label);
+          optsWrap.appendChild(row);
+        });
+
+        qWrap.append(qTitle, optsWrap);
+        quizForm.appendChild(qWrap);
+      });
+    }
+
+    function updateProgress(){
+      const answered = Object.keys(userAnswers).length;
+      kAnswered.textContent = answered;
+      const pct = Math.round(answered/COUNT*100);
+      kProgress.textContent = pct + '%';
+      bar.style.width = pct + '%';
+      document.getElementById('btn-submit').disabled = answered !== COUNT;
+      document.getElementById('helper').textContent = answered===COUNT? '¡Listo para calificar!':'Responde todas las preguntas para habilitar el envío.';
+    }
+
+    // ====== 5) Calificar ======
+    function grade(){
+      submitted = true;
+      let correct=0; let wrongList=[];
+      // Limpiar marcas previas
+      current.forEach(q=>{
+        const qRoot = document.getElementById(`q-${q.id}`);
+        qRoot.querySelectorAll('.opt').forEach(o=>o.classList.remove('correct','wrong'));
+      });
+
+      current.forEach((q, idx)=>{
+        const chosen = userAnswers[q.id];
+        if(chosen === q.answer){
+          correct++;
+          // marcar opción elegida como correcta
+          const okId = `q${q.id}-opt${chosen}`;
+          document.querySelector(`label[for="${okId}"]`).classList.add('correct');
+        } else {
+          wrongList.push(idx+1);
+          const chosenId = `q${q.id}-opt${chosen}`;
+          const rightId = `q${q.id}-opt${q.answer}`;
+          if(chosen!==undefined){
+            document.querySelector(`label[for="${chosenId}"]`).classList.add('wrong');
+          }
+          document.querySelector(`label[for="${rightId}"]`).classList.add('correct');
+        }
+      });
+
+      const scorePct = Math.round((correct/COUNT)*100);
+      kStatus.textContent = 'Calificado';
+
+      // Mostrar resultados
+      const sum = el('div', {class:'card'},
+        el('h2', {style:'margin-top:0'}, 'Resultados'),
+        el('div', {class:'kpi'},
+          el('div', {class:'pill'}, el('div', {class:'title'}, 'Aciertos'), el('div', {class:'value'}, String(correct))),
+          el('div', {class:'pill'}, el('div', {class:'title'}, 'Errores'), el('div', {class:'value'}, String(COUNT - correct))),
+          el('div', {class:'pill'}, el('div', {class:'title'}, 'Puntaje'), el('div', {class:'value'}, scorePct + '%')),
+        ),
+        el('div', {style:'margin-top:10px'},
+          wrongList.length ? el('div', {}, el('div', {class:'title muted', style:'margin-bottom:6px'}, 'Preguntas incorrectas:'),
+            el('div', {class:'list-inline'}, ...wrongList.map(n=> el('span', {class:'chip bad'}, String(n))) ) ) : el('div', {class:'muted'}, '¡Todo correcto!')
+        ),
+        el('details', {style:'margin-top:12px'},
+          el('summary', {}, 'Ver resumen por pregunta'),
+          buildReview()
+        )
+      );
+
+      resultsBox.innerHTML='';
+      resultsBox.appendChild(sum);
+
+      document.getElementById('btn-review').style.display = 'inline-block';
+    }
+
+    function buildReview(){
+      const wrap = el('div', {style:'margin-top:10px'});
+      current.forEach((q, idx)=>{
+        const chosen = userAnswers[q.id];
+        const isCorrect = chosen === q.answer;
+        const row = el('div', {class:'q', style:'margin-top:10px'},
+          el('div', {style:'display:flex; align-items:center; justify-content:space-between; gap:8px'},
+            el('div', {class:'badge'}, `#${idx+1}`),
+            el('div', {class:'badge', style:`color:${isCorrect? 'var(--accent)': 'var(--danger)'}`}, isCorrect? 'Correcta':'Incorrecta')
+          ),
+          el('div', {style:'margin:8px 0; font-weight:600'}, q.text),
+          el('div', {}, el('span', {class:'muted'}, 'Tu respuesta: '), document.createTextNode(chosen!=null? q.options[chosen] : '—')),
+          el('div', {}, el('span', {class:'muted'}, 'Respuesta correcta: '), document.createTextNode(q.options[q.answer]))
+        );
+        wrap.appendChild(row);
+      });
+      return wrap;
+    }
+
+    // ====== 6) Acciones ======
+    function newSelection(){
+      current = pickRandom(BANK, COUNT).map(q=> ({...q, options: shuffle(q.options)}));
+      // Ajustar índice correcto según shuffle de opciones
+      current = current.map(q=> {
+        const idx = q.options.indexOf(BANK[q.id-1].options[BANK[q.id-1].answer]);
+        return {...q, answer: idx};
+      });
+      renderQuiz();
+    }
+
+    function resetSame(){
+      // Mantener mismas preguntas y orden, solo limpiar respuestas y estilos
+      userAnswers = {}; submitted=false; resultsBox.innerHTML='';
+      // Quitar marcas de correcto/incorrecto
+      document.querySelectorAll('.opt').forEach(el=> el.classList.remove('correct','wrong'));
+      // Desmarcar todas las selecciones (radios)
+      quizForm.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; });
+      // Restablecer estado y UI
+      kStatus.textContent = 'En curso';
+      updateProgress();
+      // Ocultar botón de reintento hasta próxima calificación
+      document.getElementById('btn-review').style.display = 'none';
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    // ====== 7) Eventos UI ======
+    document.getElementById('btn-submit').addEventListener('click', (e)=>{ e.preventDefault(); if(!submitted) grade(); });
+    document.getElementById('btn-new').addEventListener('click', (e)=>{ e.preventDefault(); newSelection(); window.scrollTo({top:0, behavior:'smooth'}); });
+    document.getElementById('btn-reset').addEventListener('click', (e)=>{ e.preventDefault(); resetSame(); });
+    document.getElementById('btn-review').addEventListener('click', (e)=>{ e.preventDefault(); resetSame(); });
+
+    // ====== 8) Inicializar ======
+    document.getElementById('k-total').textContent = '10';
+    newSelection();
+  </script>
+</body>
+</html>
